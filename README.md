@@ -1,13 +1,6 @@
-# SkillPulse — GitHub Actions & Kubernetes Masterclass
+# SkillPulse — GitHub Actions CI/CD on Kubernetes
 
 A small, real application with a real CI/CD pipeline. The app — SkillPulse — lets you track skills you're learning and the hours you put in. The point isn't the app. The point is everything around it: how a single `git push` becomes a running update on a server in under two minutes, with no human pressing any button.
-
-A hands-on, end-to-end DevOps project: a three-tier app that ships itself from a `git push` to a running Kubernetes workload, with no manual step in between.
-
-> **New here? Two beginner-friendly companion guides:**
->
-> - [`docs/skillpulse-cicd-guide.pdf`](docs/skillpulse-cicd-guide.pdf) — chapter one. 29 pages on the GitHub Actions pipeline: DevOps foundations, CI/CD, containers, deploying to a real EC2, plus resume + interview prep.
-> - [`docs/skillpulse-kubernetes-guide.pdf`](docs/skillpulse-kubernetes-guide.pdf) — chapter two. 32 pages on running this app on a local `kind` cluster: Kubernetes primitives, manifest walkthrough, the dev loop, real failures we hit (arch mismatches, port collisions), interview prep.
 
 ---
 
@@ -200,11 +193,11 @@ make down                        # deletes the cluster (and the MySQL data with 
 What `make up` actually runs, in order:
 
 ```bash
-docker build -t trainwithshubham/skillpulse-backend:latest  ./backend
-docker build -t trainwithshubham/skillpulse-frontend:latest ./frontend
+docker build -t nitin1094/skillpulse-backend:latest  ./backend
+docker build -t nitin1094/skillpulse-frontend:latest ./frontend
 kind create cluster --config k8s/kind-config.yaml --name skillpulse
-kind load docker-image trainwithshubham/skillpulse-backend:latest  --name skillpulse
-kind load docker-image trainwithshubham/skillpulse-frontend:latest --name skillpulse
+kind load docker-image nitin1094/skillpulse-backend:latest  --name skillpulse
+kind load docker-image nitin1094/skillpulse-frontend:latest --name skillpulse
 kubectl apply -f k8s/00-namespace.yaml \
               -f k8s/10-mysql.yaml \
               -f k8s/20-backend.yaml \
@@ -301,7 +294,7 @@ The new CD path doesn't `kubectl apply` from GitHub Actions — your kind cluste
 ```
 git push to main
     ↓
-CI: build images, push trainwithshubham/skillpulse-{backend,frontend}:{latest,<sha>}
+CI: build images, push nitin1094/skillpulse-{backend,frontend}:{latest,<sha>}
     ↓
 cd-k8s.yml: sed image: lines in k8s/20-backend.yaml + k8s/30-frontend.yaml
             commit "deploy: pin backend+frontend to <short-sha>" to main as github-actions[bot]
@@ -323,7 +316,7 @@ kind nodes pull the new :<sha> from Docker Hub → rolling update
    | `DOCKERHUB_TOKEN` | a Docker Hub Personal Access Token with Read & Write scope |
 
 3. **Set the repo variable** `DEPLOY_ENABLED = "true"` (`Settings → Variables → Actions`). Until this is `true`, CI builds without pushing and both CD workflows skip cleanly — the "dry run" state.
-4. **Push any code change** (not a `.md`, not under `k8s/` or `docs/` — those are deliberately ignored by CI). Watch the Actions tab:
+4. **Push any code change** (not a `.md`, not under `k8s/` — those are deliberately ignored by CI). Watch the Actions tab:
    - **CI** builds + pushes both images to Docker Hub.
    - **CD (kind cluster — manifest bump)** commits a `deploy: pin backend+frontend to <sha>` change to main.
 5. **Pull and deploy**, on the laptop with the kind cluster:
@@ -336,7 +329,7 @@ kind nodes pull the new :<sha> from Docker Hub → rolling update
 
 ### What about the EC2 path?
 
-The previous chapter's `cd.yml` is still in the repo — it SSHes into an EC2 and runs `docker compose up`. It's gated on the same `DEPLOY_ENABLED` variable plus three EC2 secrets (`EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`). Skip those secrets and `cd.yml` will fail loudly when `DEPLOY_ENABLED=true`; that's expected — it's the previous chapter's deploy target, kept around as the masterclass artifact.
+`cd.yml` is still in the repo — it SSHes into an EC2 and runs `docker compose up`. It's gated on the same `DEPLOY_ENABLED` variable plus three EC2 secrets (`EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`). Skip those secrets and `cd.yml` will fail loudly when `DEPLOY_ENABLED=true`; that's expected — it's the VM deploy path, kept alongside the Kubernetes one.
 
 ### Break it on purpose to learn
 
@@ -375,9 +368,9 @@ docker-compose.yml      three services: db, backend, frontend
 
 ## Where this goes next
 
-This is the **GitHub Actions** half of the masterclass. The pipeline currently deploys to a single EC2 via SSH + docker compose — a fine starting point, and the most common "first real pipeline" in the industry.
+The pipeline deploys to a single EC2 via SSH + docker compose — a fine starting point, and the most common "first real pipeline" in the industry.
 
-The Kubernetes half of the course evolves this same app onto a cluster:
+The Kubernetes path evolves this same app onto a cluster:
 
 - Replace `docker compose` with manifests (Deployment, Service, Ingress).
 - Replace SSH-driven deploys with `kubectl apply` from CI, then with GitOps (Argo CD / Flux).
@@ -385,13 +378,3 @@ The Kubernetes half of the course evolves this same app onto a cluster:
 - Run the cluster on EKS / GKE / AKS or local (kind / minikube).
 
 Same app. Same pipeline shape. Different runtime — and a lot more power.
-
----
-
-## Credits
-
-Maintained by [Nitin](https://github.com/nitin1094).
-
-This project started from the excellent **GitHub Actions & Kubernetes Masterclass** by [Shubham Londhe (LondheShubham153)](https://github.com/LondheShubham153) / [TrainWithShubham](https://www.youtube.com/@TrainWithShubham) — the original teaching repo is [here](https://github.com/LondheShubham153/github-actions-kubernetes-masterclass). The two guides under `docs/` are his written course material, reproduced with credit. Everything here has been reworked and extended as my own build-out of the pipeline.
-
-If this repo helped you understand a real CI/CD pipeline end to end, share it forward.
