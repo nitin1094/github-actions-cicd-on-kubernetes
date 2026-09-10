@@ -2,6 +2,11 @@
 
 A small, real application with a real CI/CD pipeline. The app — SkillPulse — lets you track skills you're learning and the hours you put in. The point isn't the app. The point is everything around it: how a single `git push` becomes a running update on a server in under two minutes, with no human pressing any button.
 
+> **New here? Two companion guides walk through everything in this repo:**
+>
+> - [`docs/skillpulse-cicd-guide.md`](docs/skillpulse-cicd-guide.md) — 29 pages on the GitHub Actions pipeline: DevOps foundations, CI/CD, containers, deploying to a real EC2, plus resume + interview prep.
+> - [`docs/skillpulse-kubernetes-guide.md`](docs/skillpulse-kubernetes-guide.md) — 32 pages on running this app on a local `kind` cluster: Kubernetes primitives, manifest walkthrough, the dev loop, real failures (arch mismatches, port collisions), interview prep.
+
 ---
 
 ## Why DevOps matters
@@ -316,7 +321,7 @@ kind nodes pull the new :<sha> from Docker Hub → rolling update
    | `DOCKERHUB_TOKEN` | a Docker Hub Personal Access Token with Read & Write scope |
 
 3. **Set the repo variable** `DEPLOY_ENABLED = "true"` (`Settings → Variables → Actions`). Until this is `true`, CI builds without pushing and both CD workflows skip cleanly — the "dry run" state.
-4. **Push any code change** (not a `.md`, not under `k8s/` — those are deliberately ignored by CI). Watch the Actions tab:
+4. **Push any code change** (not a `.md`, not under `k8s/` or `docs/` — those are deliberately ignored by CI). Watch the Actions tab:
    - **CI** builds + pushes both images to Docker Hub.
    - **CD (kind cluster — manifest bump)** commits a `deploy: pin backend+frontend to <sha>` change to main.
 5. **Pull and deploy**, on the laptop with the kind cluster:
